@@ -21,9 +21,14 @@ struct ContentView: View {
     @EnvironmentObject var authManager: AuthManager
     @State private var refreshKey = UUID()
     @State private var signatureImage: UIImage?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var usesExpandedLayout: Bool {
+        horizontalSizeClass == .regular
+    }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 
                 //YourContentView(refreshKey: refreshKey)
@@ -35,7 +40,11 @@ struct ContentView: View {
                     Spacer()
                     //Text("Content View with scac is \(scac)")
                     Image("\(scac)logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: usesExpandedLayout ? 560 : 320)
                         .frame(maxHeight: .infinity)
+                        .padding(usesExpandedLayout ? 40 : 16)
                     
                     Button("Log Out") {
                         authManager.logout()
@@ -45,7 +54,7 @@ struct ContentView: View {
                     
                 }
                 
-                HStack {
+                HStack(spacing: usesExpandedLayout ? 24 : 8) {
                     Spacer()
                     Button {
                         selectedData = nil
@@ -53,7 +62,8 @@ struct ContentView: View {
                         Image("home")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40)
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     
@@ -64,7 +74,8 @@ struct ContentView: View {
                         Image("pin")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     
@@ -75,7 +86,8 @@ struct ContentView: View {
                         Image("scan")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     
@@ -97,7 +109,8 @@ struct ContentView: View {
                         Image("container")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 50, height: 50) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 56 : 42,
+                                   height: usesExpandedLayout ? 56 : 42)
                     }
                     .buttonStyle(.plain)
                     Spacer()
@@ -105,7 +118,8 @@ struct ContentView: View {
                         Image("calendar")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     Spacer()
@@ -113,7 +127,8 @@ struct ContentView: View {
                         Image("dollar")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     Spacer()
@@ -122,13 +137,16 @@ struct ContentView: View {
                         Image("info")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 40, height: 40) // Adjust size as needed
+                            .frame(width: usesExpandedLayout ? 48 : 36,
+                                   height: usesExpandedLayout ? 48 : 36)
                     }
                     .buttonStyle(.plain)
                     Spacer()
                 }
                 .buttonStyle(.bordered)
-                .padding()
+                .padding(.horizontal, usesExpandedLayout ? 32 : 12)
+                .padding(.vertical, 12)
+                .background(.bar)
             }
             //.navigationTitle("Data Display App")
         }
@@ -174,4 +192,3 @@ struct APIApp: App {
 #Preview {
     ContentView()
 }
-

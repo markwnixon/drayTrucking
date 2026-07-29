@@ -43,7 +43,7 @@ struct PinAssignmentView: View {
 
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 Picker("", selection: $showExistingPins) {
                     Text("Show Pins").tag(true)
@@ -646,7 +646,6 @@ struct PinDate: Codable, Identifiable, Hashable {
     let date: String        // e.g. "2026-01-22"
     let display: String     // e.g. "Jan 22, 2026"
 }
-
 
 
 

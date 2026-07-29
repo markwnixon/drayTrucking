@@ -37,7 +37,7 @@ struct APIResponse2View: View {
     
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             
             List{
                 ForEach(Array(listData.enumerated()), id: \.element.id) { index, item in
@@ -148,4 +148,3 @@ struct CalDetailView: View {
 
     }
 }
-

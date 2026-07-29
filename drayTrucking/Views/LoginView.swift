@@ -24,6 +24,7 @@ struct LoginView: View {
     
     //@StateObject private var authManager = AuthManager()
     @EnvironmentObject var authManager: AuthManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     
     var body: some View {
@@ -53,14 +54,12 @@ struct LoginView: View {
                 
             } else {
                 
-                VStack(spacing: 20) {
-                    
-                    Spacer()
-    
-                    Image("draylogo2")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: .infinity)
+                ScrollView {
+                    VStack(spacing: 20) {
+                        Image("draylogo2")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: horizontalSizeClass == .regular ? 280 : 190)
                     
                     Text("🔐 Secure Login")
                         .font(.largeTitle)
@@ -105,7 +104,11 @@ struct LoginView: View {
                         .disabled(!scacList.contains(scac))
             
                     }
-                .padding()
+                    .frame(maxWidth: 520)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, horizontalSizeClass == .regular ? 60 : 24)
+                    .frame(maxWidth: .infinity)
+                }
 
             }
             }

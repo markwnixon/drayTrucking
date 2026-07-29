@@ -19,7 +19,7 @@ struct InformationView: View {
     @EnvironmentObject var authManager: AuthManager
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 if let selectedData = selectedData {
                     selectedData
@@ -98,4 +98,3 @@ struct InformationView: View {
 
    
 }
-

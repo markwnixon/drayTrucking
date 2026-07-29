@@ -120,7 +120,7 @@ struct APIResponse4View: View {
     let listData : [DriverList]
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(listData, id: \.id) { item in
                 NavigationLink(destination: DriverDetailView(item: item)){
                     VStack(alignment: .leading) {
@@ -148,7 +148,7 @@ struct APIResponse5View: View {
     // }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(listData, id: \.id) { item in
                 NavigationLink(destination: TruckDetailView(item: item)){
                     VStack(alignment: .leading) {
@@ -177,7 +177,7 @@ struct APIResponse6View: View {
     // }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(listData, id: \.id) { item in
                 NavigationLink(destination: ChassisDetailView(item: item)){
                     VStack(alignment: .leading) {
@@ -393,4 +393,3 @@ struct ChassisDetailView: View {
     }
     
 }
-

@@ -17,7 +17,7 @@ struct APIResponse3View: View {
     //@State private var listData: [ContainersOut] = []
     let listData : [Financials]
         var body: some View {
-            NavigationView {
+            NavigationStack {
                 List(listData, id: \.id) { item in
                     VStack(alignment: .leading) {
                         Text(item.company).font(.headline)
@@ -28,5 +28,4 @@ struct APIResponse3View: View {
                 }
             }
         }
-
 
