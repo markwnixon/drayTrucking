@@ -35,6 +35,7 @@ struct ScanAndUploadView: View {
     @State private var uploadMessage: String = ""
     @EnvironmentObject var authManager: AuthManager
     @State private var showSignatureOverlay = false
+    @State private var showPODPreview = false
 
     
     var body: some View {
@@ -83,6 +84,14 @@ struct ScanAndUploadView: View {
             Button("Sign Electronic PDF") {
                 if let container = selectedContainer {
                     fetchPDF(for: container.containerNumber)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(selectedContainer == nil)
+            
+            Button("Print Original POD") {
+                if let container = selectedContainer {
+                    fetchPDFForPrint(container.containerNumber)
                 }
             }
             .buttonStyle(.borderedProminent)
@@ -156,8 +165,38 @@ struct ScanAndUploadView: View {
                 }
             }
         }
+        
+        .sheet(isPresented: $showPODPreview) {
+            if let data = pdfData {
+                PODPrintPreviewView(data: data)
+            }
+        }
 
         
+    }
+    
+    private func fetchPDFForPrint(_ containerNumber: String) {
+        guard let url = URL(string: "\(authManager.baseURL)get_pdf_for_container?container_number=\(containerNumber)") else {
+            print("❌ Invalid URL for container \(containerNumber)")
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("❌ Failed to download PDF: \(error.localizedDescription)")
+                return
+            }
+
+            guard let data = data else {
+                print("⚠️ No data received.")
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.pdfData = data
+                self.showPODPreview = true   // 👈 Show preview sheet
+            }
+        }.resume()
     }
     
     // MARK: - Fetch containers
@@ -187,14 +226,15 @@ struct ScanAndUploadView: View {
             image.draw(in: drawRect)
         }
     }
-
+    
+    @AppStorage("username") private var username: String = ""
     
     // MARK: - Upload PDF
     private func uploadPDF() {
         guard let pdfData = pdfData,
               let container = selectedContainer,
               let url = URL(string: "\(authManager.baseURL)/upload_pdf") else { return }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
@@ -202,6 +242,12 @@ struct ScanAndUploadView: View {
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
         var body = Data()
+        
+        // 1️⃣ Add username
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"username\"\r\n\r\n")
+        body.append("\(username)\r\n")
+        
         body.append("--\(boundary)\r\n")
         body.append("Content-Disposition: form-data; name=\"container_number\"\r\n\r\n")
         body.append("\(container.containerNumber)\r\n")
@@ -255,6 +301,47 @@ struct ScanAndUploadView: View {
             }
         }.resume()
     }
+    
+
+    struct PODPrintPreviewView: View {
+        let data: Data
+        @Environment(\.dismiss) private var dismiss
+        
+        var body: some View {
+            NavigationStack {
+                if let pdfDoc = PDFDocument(data: data) {
+                    PDFKitView(pdfDocument: pdfDoc)
+                        .padding()
+                        .navigationTitle("POD Preview")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Cancel") { dismiss() }
+                            }
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button { printPDF() } label: { Image(systemName: "printer") }
+                            }
+                        }
+                } else {
+                    VStack(spacing: 20) {
+                        Text("Unable to preview PDF")
+                        Button("Cancel") { dismiss() }
+                    }
+                }
+            }
+        }
+        
+        private func printPDF() {
+            guard UIPrintInteractionController.isPrintingAvailable else { return }
+            let controller = UIPrintInteractionController.shared
+            let info = UIPrintInfo(dictionary: nil)
+            info.jobName = "POD Document"
+            info.outputType = .general
+            controller.printInfo = info
+            controller.printingItem = data
+            controller.present(animated: true)
+        }
+    }
 
 
     
@@ -263,24 +350,47 @@ struct ScanAndUploadView: View {
     
 }
 
+
 // MARK: - PDF Preview
 struct PDFPreviewView: View {
     let data: Data
     
+    @Environment(\.dismiss) private var dismiss
+    
     var body: some View {
-        if let pdfDocument = PDFDocument(data: data),
-           let firstPage = pdfDocument.page(at: 0) {
-            
-            let pageBounds = firstPage.bounds(for: .mediaBox)
-            let aspectRatio = pageBounds.width / pageBounds.height
-            
-            PDFKitView(pdfDocument: pdfDocument)
-                .aspectRatio(aspectRatio, contentMode: .fit)
-                .cornerRadius(12)
-                .shadow(radius: 4)
-                .padding()
-        } else {
-            Text("Unable to preview PDF")
+        NavigationStack {
+            Group {
+                if let pdfDocument = PDFDocument(data: data),
+                   let firstPage = pdfDocument.page(at: 0) {
+                    
+                    let pageBounds = firstPage.bounds(for: .mediaBox)
+                    let aspectRatio = pageBounds.width / pageBounds.height
+                    
+                    PDFKitView(pdfDocument: pdfDocument)
+                        .aspectRatio(aspectRatio, contentMode: .fit)
+                        .cornerRadius(12)
+                        .shadow(radius: 4)
+                        .padding()
+                } else {
+                    VStack(spacing: 20) {
+                        Text("Unable to preview PDF")
+                            .font(.headline)
+                        
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                }
+            }
+            .navigationTitle("Preview")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
         }
     }
 }
@@ -715,4 +825,3 @@ struct PDFFrameReporter: UIViewRepresentable {
         }
     }
 }
-
